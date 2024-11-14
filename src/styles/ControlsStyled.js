@@ -1,16 +1,9 @@
 //ControlsStyled.js
 
 import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  MiniMap,
-  Controls,
-  Panel,
-  Background,
+  Controls
 } from "@xyflow/react";
-import styled, { ThemeProvider } from "styled-components";
+import styled from "styled-components";
 
 const ControlsStyled = styled(Controls)`
   button {

@@ -1,8 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
+import { Form, Button, Select, Modal } from "antd";
+const { Option } = Select;
 
 const DeleteEdgeForm = ({ nodes, edges, setEdges }) => {
   // Pilih edge yang akan dihapus
   const [selectedEdgeId, setSelectedEdgeId] = React.useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Fungsi untuk menampilkan modal
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  // Fungsi untuk menutup modal
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
 
   // Fungsi untuk menghapus edge yang dipilih
   const handleDeleteEdge = () => {
@@ -18,58 +31,79 @@ const DeleteEdgeForm = ({ nodes, edges, setEdges }) => {
 
     // Reset selectedEdgeId setelah penghapusan
     setSelectedEdgeId("");
+    setIsModalVisible(false); // Menutup modal setelah node ditambahkan
+  };
+
+  // Fungsi saat form disubmit
+  const handleSubmit = () => {
+    handleDeleteEdge();
+    setIsModalVisible(false); // Menutup modal setelah node ditambahkan
   };
 
   return (
-    <div
-    style={{
-        position: "absolute",
-        bottom: "20px",
-        left: "380px",
-        padding: "10px",
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-        width: "250px", // Form lebarnya
-      }}
-    >
-      <h3>Delete Edge</h3>
-
-      {/* Dropdown untuk memilih edge yang akan dihapus */}
-      <select
-        value={selectedEdgeId}
-        onChange={(e) => setSelectedEdgeId(e.target.value)}
+    <div>
+      <Button
+        variant="solid"
+        color="danger"
+        onClick={showModal}
         style={{
-          marginBottom: "8px",
-          padding: "5px",
-          width: "100%",
+          position: "absolute",
+          top: "120px",
+          left: "20px",
+          padding: "10px",
+          // backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+          // width: "300px",
         }}
       >
-        <option value="">Pilih Edge untuk Dihapus</option>
-        {edges.map((edge) => (
-          <option key={edge.id} value={edge.id}>
-            {`Edge: ${edge.source} -> ${edge.target}`}
-          </option>
-        ))}
-      </select>
-
-      <br />
-
-      {/* Tombol untuk menghapus edge */}
-      <button
-        onClick={handleDeleteEdge}
-        style={{
-          padding: "5px 10px",
-          backgroundColor: "#dc3545",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          width: "100%",
-        }}
+        Hapus Edge
+      </Button>
+      <Modal
+        title="Remove Edge"
+        open={isModalVisible} // Ganti 'visible' dengan 'open'
+        onCancel={handleCancel}
+        footer={null}
       >
-        Delete Edge
-      </button>
+        <Form
+          onFinish={handleSubmit}
+          // initialValues={newNodeData}
+          layout="vertical"
+        >
+
+          {/* Dropdown untuk memilih edge yang akan dihapus */}
+          <Form.Item label="" name="edgeId">
+            <Select
+              value={selectedEdgeId}
+              onChange={setSelectedEdgeId}
+              placeholder="Select Node to Connect"
+            >
+              <Option value="">Select Node to Connect</Option>
+              {edges.map((edge) => (
+                <Option key={edge.id} value={edge.id}>
+                  Edge: {edge.source} ({edge.target})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <br />
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              style={{
+                width: "100%",
+                backgroundColor: "#dc3545",
+                color: "white",
+              }}
+            >
+              Delete Edge{" "}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

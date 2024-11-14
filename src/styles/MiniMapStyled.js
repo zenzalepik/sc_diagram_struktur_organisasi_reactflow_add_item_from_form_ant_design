@@ -1,16 +1,18 @@
 //MiniMapStyled.js
 
 import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  addEdge,
+  // ReactFlow,
+  // useNodesState,
+  // useEdgesState,
+  // addEdge,
   MiniMap,
-  Controls,
-  Panel,
-  Background,
+  // Controls,
+  // Panel,
+  // Background,
 } from "@xyflow/react";
-import styled, { ThemeProvider } from "styled-components";
+import styled
+//, { ThemeProvider } 
+from "styled-components";
 
 const MiniMapStyled = styled(MiniMap)`
   background-color: ${(props) => props.theme.bg};
