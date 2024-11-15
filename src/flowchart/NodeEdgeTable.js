@@ -5,6 +5,8 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
   const [isUpdateFormVisible, setIsUpdateFormVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNodeId, setSelectedNodeId] = useState(null); // Menyimpan ID node yang dipilih
+
 
   // Fungsi untuk menghapus node beserta edges yang terhubung
   const handleDeleteNode = (nodeId) => {
@@ -19,6 +21,10 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
   // Fungsi untuk menampilkan modal dengan data node yang dipilih
   const handleUpdateClick = (node) => {
     setSelectedNode(node); // Set selected node
+    setSelectedNodeId(node.id);  // Set ID node yang dipilih
+    const inisiasivalue = {
+      delaut: node.id, // ID node yang dipilih
+    };
     setIsUpdateFormVisible(true); // Show the update form
   };
 
@@ -65,14 +71,19 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
 
   // Fungsi untuk menangani klik edit edge
   const handleEditPimpinan = (record) => {
+    setSelectedNodeId(record.id);
+
     // Temukan edge yang terhubung dengan node yang dipilih
     const connectedEdges = edges.filter(
       (edge) => (edge.target === record.id)
     );
-      const edge = connectedEdges[0];
-      setSelectedEdge(edge); // Set edge yang dipilih untuk diedit
-      setIsEditPimpinanFormVisible(true); // Tampilkan form edit edge
-  };
+    const edge = connectedEdges[0]; // Ambil edge pertama yang ditemukan
+
+    setSelectedNode(record); // Set node yang dipilih
+    setSelectedEdge(edge); // Set edge yang dipilih untuk diedit
+    setIsEditPimpinanFormVisible(true); // Tampilkan form edit edge
+};
+
   
   // Fungsi untuk menangani klik edit edge
   const handleEditEdgeClick = (record) => {
@@ -295,63 +306,61 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
       />
       {/* //Modal edit pimpinan */}
       <Modal
-        title={`Edit Edge ${selectedEdge ? selectedEdge.id : ""}`}
-        visible={isEditPimpinanFormVisible}
-        onCancel={handleCancelPimpinanEdit}
-        footer={null}
-        destroyOnClose={true}
-      >
-        {selectedEdge ? (
-          <Form
-            initialValues={{
-              source: selectedEdge.source,
-              target: selectedEdge.target,
-            }}
-            onFinish={handleEditPimpinanFormSubmit}
-            layout="vertical"
-          >
-            <Form.Item
-              label="Source Node"
-              name="source"
-              rules={[{ required: true, message: "Source node wajib diisi" }]}
-            >
-              <Select style={{ width: "100%" }}>
-                {nodes
-                  .filter((node) => node.id !== selectedEdge.target) // Pastikan tidak memilih target yang sama dengan source
-                  .map((node) => (
-                    <Select.Option key={node.id} value={node.id}>
-                      {node.data.name} (ID: {node.id})
-                    </Select.Option>
-                  ))}
-              </Select>
-            </Form.Item>
+  title={`Edit Edge ${selectedEdge ? selectedEdge.id : ""}`}
+  visible={isEditPimpinanFormVisible}
+  onCancel={handleCancelPimpinanEdit}
+  footer={null}
+  destroyOnClose={true}
+>
+  <Form
+    initialValues={{
+      source: selectedEdge ? selectedEdge.source : null,  // Jika selectedEdge null, set ke null
+      target: selectedEdge ? selectedEdge.target : selectedNodeId   // =>>> Yang sini
+    }}
+    onFinish={handleEditPimpinanFormSubmit}
+    layout="vertical"
+  >
+    {/* {selectedEdge.target} */}
+    <Form.Item
+      label="Source Node"
+      name="source"
+      rules={[{ required: true, message: "Source node wajib diisi" }]}
+    >
+      <Select style={{ width: "100%" }}>
+        {nodes
+          .filter((node) => node.id !== selectedEdge?.target) // Pastikan tidak memilih target yang sama dengan source
+          .map((node) => (
+            <Select.Option key={node.id} value={node.id}>
+              {node.data.name} (ID: {node.id})
+            </Select.Option>
+          ))}
+      </Select>
+    </Form.Item>
 
-            <Form.Item
-              label="Target Node"
-              name="target"
-              rules={[{ required: true, message: "Target node wajib diisi" }]}
-            >
-              <Select style={{ width: "100%" }}>
-                {nodes
-                  .filter((node) => node.id !== selectedEdge.source) // Pastikan tidak memilih source yang sama dengan target
-                  .map((node) => (
-                    <Select.Option key={node.id} value={node.id}>
-                      {node.data.name} (ID: {node.id})
-                    </Select.Option>
-                  ))}
-              </Select>
-            </Form.Item>
+    <Form.Item
+      label="Target Node"
+      name="target"
+      rules={[{ required: true, message: "Target node wajib diisi" }]}
+    >
+      <Select style={{ width: "100%" }}>
+        {nodes
+          .filter((node) => node.id !== selectedEdge?.source) // Pastikan tidak memilih source yang sama dengan target
+          .map((node) => (
+            <Select.Option key={node.id} value={node.id}>
+              {node.data.name} (ID: {node.id})
+            </Select.Option>
+          ))}
+      </Select>
+    </Form.Item>
 
-            <Form.Item>
-              <Button type="primary" htmlType="submit">
-                Simpan
-              </Button>
-            </Form.Item>
-          </Form>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </Modal>
+    <Form.Item>
+      <Button type="primary" htmlType="submit">
+        Simpan
+      </Button>
+    </Form.Item>
+  </Form>
+</Modal>
+
       {/* // */}
       <Modal
         title={`Update Node ${selectedNode ? selectedNode.id : ""}`}
