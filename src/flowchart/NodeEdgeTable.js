@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Table, Button, Popconfirm, Modal } from "antd";
+import { Table, Button, Popconfirm, Modal, Form, Input, Select } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
-  // State untuk menampilkan modal dan menyimpan data node yang dipilih
   const [isUpdateFormVisible, setIsUpdateFormVisible] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
 
@@ -26,7 +25,28 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
     setSelectedNode(null);
   };
 
-  // Menambahkan kolom Source dan Target di tabel
+  const handleFormSubmit = (values) => {
+    // Update node data
+    setNodes((prevNodes) => {
+      return prevNodes.map((node) =>
+        node.id === selectedNode.id ? { ...node, data: { ...node.data, ...values } } : node
+      );
+    });
+
+    // Menambahkan atau memperbarui edge terkoneksi
+    if (values.source && values.target) {
+      const newEdge = {
+        id: `${values.source}-${values.target}`,
+        source: values.source,
+        target: values.target,
+      };
+      setEdges((prevEdges) => [...prevEdges, newEdge]);
+    }
+
+    setIsUpdateFormVisible(false);
+    setSelectedNode(null);
+  };
+
   const columns = [
     {
       title: "ID Node",
@@ -44,42 +64,20 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
       key: "position",
     },
     {
-      title: "Source",
-      key: "source",
+      title: "Edge Terkoneksi",
+      key: "edges",
       render: (_, record) => {
         const connectedEdges = edges.filter(
-          (edge) => edge.target === record.id
+          (edge) => edge.source === record.id || edge.target === record.id
         );
         return connectedEdges.length > 0 ? (
           <ul>
             {connectedEdges.map((edge) => {
-              const sourceNode = nodes.find((n) => n.id === edge.source);
+              const otherNodeId = edge.source === record.id ? edge.target : edge.source;
+              const otherNode = nodes.find((n) => n.id === otherNodeId);
               return (
                 <li key={edge.id}>
-                  {sourceNode ? `${sourceNode.data.name} (ID: ${sourceNode.id})` : "Unknown"}
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <span>Tidak ada koneksi</span>
-        );
-      },
-    },
-    {
-      title: "Target",
-      key: "target",
-      render: (_, record) => {
-        const connectedEdges = edges.filter(
-          (edge) => edge.source === record.id
-        );
-        return connectedEdges.length > 0 ? (
-          <ul>
-            {connectedEdges.map((edge) => {
-              const targetNode = nodes.find((n) => n.id === edge.target);
-              return (
-                <li key={edge.id}>
-                  {targetNode ? `${targetNode.data.name} (ID: ${targetNode.id})` : "Unknown"}
+                  {otherNode ? `${record.name} (ID: ${record.id}) ➔ ${otherNode.data.name} (ID: ${otherNode.id})` : "Unknown"}
                 </li>
               );
             })}
@@ -148,37 +146,80 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
       />
 
       <Modal
-        title="Update Node"
+        title={`Update Node ${selectedNode ? selectedNode.id : ''}`}
         visible={isUpdateFormVisible}
         onCancel={handleCancel}
         footer={null}
         destroyOnClose={true}
       >
         {selectedNode ? (
-          <div>
-            <p><strong>ID Node:</strong> {selectedNode.id}</p>
-            <p><strong>Nama Node:</strong> {selectedNode.name || "Nama tidak tersedia"}</p>
-            <p><strong>Posisi Node:</strong> {selectedNode.position || "Posisi tidak tersedia"}</p>
-            <p><strong>Edge Terkoneksi:</strong>
-              {edges.filter((edge) => edge.source === String(selectedNode.id) || edge.target === String(selectedNode.id)).length > 0 ? (
-                <ul>
-                  {edges.filter((edge) => edge.source === String(selectedNode.id) || edge.target === String(selectedNode.id))
-                    .map((edge) => {
-                      const sourceNode = nodes.find((n) => String(n.id) === String(edge.source));
-                      const targetNode = nodes.find((n) => String(n.id) === String(edge.target));
-                      return (
-                        <li key={edge.id}>
-                          {sourceNode ? `${sourceNode.data.name} (ID: ${sourceNode.id})` : "Unknown"} ➔ {targetNode ? `${targetNode.data.name} (ID: ${targetNode.id})` : "Unknown"}
-                        </li>
-                      );
-                    })
-                  }
-                </ul>
-              ) : (
-                <span>Tidak ada koneksi</span>
-              )}
-            </p>
-          </div>
+          <Form
+            initialValues={{
+              name: selectedNode.name,
+              position: selectedNode.position,
+            }}
+            onFinish={handleFormSubmit}
+            layout="vertical"
+          >
+            <Form.Item
+              label="Nama Node"
+              name="name"
+              rules={[{ required: true, message: "Nama node wajib diisi" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              label="Posisi Node"
+              name="position"
+              rules={[{ required: true, message: "Posisi node wajib diisi" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Edge Terkoneksi - Menampilkan pilihan source dan target */}
+            <Form.Item label="Edge Terkoneksi">
+              <div>
+                
+                <Select
+                  placeholder="Pilih Target Node"
+                  style={{ width: "100%", marginBottom: 10 }}
+                  defaultValue={selectedNode.id} // Mengambil Source pertama
+                  disabled
+                >
+                  {nodes.map((node) => (
+                    <Select.Option key={node.id} value={node.id}>
+                      {node.data.name} (ID: {node.id})
+                    </Select.Option>
+                  ))}
+                </Select>
+
+                
+                <Select
+  placeholder="Pilih Source Node"
+  style={{ width: "100%" }}
+  defaultValue={edges
+    .filter((edge) => edge.target === selectedNode.id) // Mencari edge dengan target = selectedNode.id
+    .map((edge) => edge.source)[0]} // Mengambil source pertama yang terhubung ke selectedNode
+>
+  {nodes
+    .filter((node) => node.id !== selectedNode.id) // Menghindari pemilihan node yang sedang diedit
+    .map((node) => (
+      <Select.Option key={node.id} value={node.id}>
+        {node.data.name} (ID: {node.id})
+      </Select.Option>
+    ))}
+</Select>
+
+              </div>
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Simpan
+              </Button>
+            </Form.Item>
+          </Form>
         ) : (
           <p>Loading...</p>
         )}
