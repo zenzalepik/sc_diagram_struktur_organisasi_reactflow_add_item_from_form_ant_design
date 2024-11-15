@@ -39,10 +39,11 @@ const Flow = () => {
   const handleUpdateNode = (updatedNode) => {
     setNodes((prevNodes) =>
       prevNodes.map((node) =>
-        node.id === updatedNode.id ? updatedNode : node
+        node.id === updatedNode.id ? { ...node, data: updatedNode.data } : node
       )
     );
   };
+  
 
   const [updatedEdgeData, setUpdatedEdgeData] = useState({
     source: "",
@@ -59,9 +60,14 @@ const Flow = () => {
 
   const [isUpdateFormVisible, setIsUpdateFormVisible] = useState(false);
 
-  const handleUpdateEdge = () => {
-    // Logic to update edge...
+  const handleUpdateEdge = (updatedEdge) => {
+    setEdges((prevEdges) =>
+      prevEdges.map((edge) =>
+        edge.id === updatedEdge.id ? updatedEdge : edge
+      )
+    );
   };
+  
 
   const onEdgesChange = useCallback((changes) => {
     // Logic to handle edge changes...
