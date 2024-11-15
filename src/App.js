@@ -33,12 +33,16 @@ const Flow = () => {
     connectedTo: "",
   });
 
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [updatedNodeData, setUpdatedNodeData] = useState({
-    name: "",
-    position: "",
-    connectedTo: "",
-  });
+  const [selectedNode, setSelectedNode] = useState(null); // Untuk node yang dipilih
+  const [updatedNodeData, setUpdatedNodeData] = useState({}); // Data node yang diperbarui
+
+  const handleUpdateNode = (updatedNode) => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.id === updatedNode.id ? updatedNode : node
+      )
+    );
+  };
 
   const [updatedEdgeData, setUpdatedEdgeData] = useState({
     source: "",
@@ -54,10 +58,6 @@ const Flow = () => {
   );
 
   const [isUpdateFormVisible, setIsUpdateFormVisible] = useState(false);
-
-  const handleUpdateNode = () => {
-    // Logic to update node...
-  };
 
   const handleUpdateEdge = () => {
     // Logic to update edge...
@@ -147,7 +147,7 @@ const Flow = () => {
         nodes={nodes}
       />
 
-      {isUpdateFormVisible ? (
+      {isUpdateFormVisible && (
         <UpdateNodeForm
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
@@ -160,7 +160,7 @@ const Flow = () => {
           edges={edges}
           handleUpdateEdge={handleUpdateEdge}
         />
-      ) : null}
+      )}
 
       {/* Delete Edge Form */}
       <DeleteEdgeForm nodes={nodes} edges={edges} setEdges={setEdges} />
