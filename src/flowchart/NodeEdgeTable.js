@@ -36,7 +36,7 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
           : node
       );
     });
-  
+
     // 2. Update atau hapus edge yang terhubung (tergantung pada source dan target)
     if (values.source && values.target) {
       setEdges((prevEdges) => {
@@ -45,43 +45,54 @@ const NodeEdgeTable = ({ nodes, edges, setNodes, setEdges }) => {
           (edge) =>
             edge.source !== selectedNode.id && edge.target !== selectedNode.id
         );
-  
+
         // 2.2 Buat edge baru berdasarkan source dan target baru
         const newEdge = {
           id: `${values.source}-${values.target}`,
           source: values.source,
           target: values.target,
         };
-  
+
         // 2.3 Gabungkan edges yang telah diupdate dengan edge baru
         return [...updatedEdges, newEdge];
       });
     }
-  
+
     // Menutup form update setelah submit
     setIsUpdateFormVisible(false);
     setSelectedNode(null);
   };
 
   // Fungsi untuk menangani klik edit edge
-const handleEditEdgeClick = (record) => {
-  // Temukan edge yang terhubung dengan node yang dipilih
-  const connectedEdges = edges.filter(
-    (edge) => edge.source === record.id || edge.target === record.id
-  );
-
-  // Jika ada lebih dari satu edge, kita akan memilih salah satu untuk diedit
-  if (connectedEdges.length === 1) {
-    const edge = connectedEdges[0];
-    setSelectedEdge(edge);  // Set edge yang dipilih untuk diedit
-    setIsEditEdgeFormVisible(true);  // Tampilkan form edit edge
-  } else {
-    // Jika ada lebih dari satu edge, beri tahu pengguna
-    alert("Terdapat lebih dari satu edge untuk node ini. Pilih salah satu untuk diedit.");
-  }
-};
-
+  const handleEditPimpinan = (record) => {
+    // Temukan edge yang terhubung dengan node yang dipilih
+    const connectedEdges = edges.filter(
+      (edge) => (edge.target === record.id)
+    );
+      const edge = connectedEdges[0];
+      setSelectedEdge(edge); // Set edge yang dipilih untuk diedit
+      setIsEditPimpinanFormVisible(true); // Tampilkan form edit edge
+  };
   
+  // Fungsi untuk menangani klik edit edge
+  const handleEditEdgeClick = (record) => {
+    // Temukan edge yang terhubung dengan node yang dipilih
+    const connectedEdges = edges.filter(
+      (edge) => edge.source === record.id || edge.target === record.id
+    );
+
+    // Jika ada lebih dari satu edge, kita akan memilih salah satu untuk diedit
+    if (connectedEdges.length === 1) {
+      const edge = connectedEdges[0];
+      setSelectedEdge(edge); // Set edge yang dipilih untuk diedit
+      setIsEditEdgeFormVisible(true); // Tampilkan form edit edge
+    } else {
+      // Jika ada lebih dari satu edge, beri tahu pengguna
+      alert(
+        "Terdapat lebih dari satu edge untuk node ini. Pilih salah satu untuk diedit."
+      );
+    }
+  };
 
   const columns = [
     {
@@ -99,6 +110,46 @@ const handleEditEdgeClick = (record) => {
       dataIndex: "position",
       key: "position",
     },
+
+    {
+      title: "Pimpinan",
+      key: "edges",
+      render: (_, record) => {
+        const connectedEdges = edges.filter(
+          (edge) => edge.target === record.id
+        );
+        return (
+          <>
+            {connectedEdges.length > 0 ? (
+              <ul>
+                {connectedEdges.map((edge) => {
+                  const pinpinanNodeId =
+                    edge.source;
+                  const pinpinanNode = nodes.find((n) => n.id === pinpinanNodeId);
+                  return (
+                    <li key={edge.id}>
+                      {pinpinanNode
+                        ? `${pinpinanNode.data.name} (ID: ${pinpinanNode.id})`
+                        : "Unknown"}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <span>-</span>
+            )}
+
+            <Button
+              type="default"
+              icon={<EditOutlined />}
+              onClick={() => handleEditPimpinan(record)}
+            >
+              Ubah Pimpinan
+            </Button>
+          </>
+        );
+      },
+    },
     {
       title: "Edge Terkoneksi",
       key: "edges",
@@ -106,30 +157,35 @@ const handleEditEdgeClick = (record) => {
         const connectedEdges = edges.filter(
           (edge) => edge.source === record.id || edge.target === record.id
         );
-        return connectedEdges.length > 0 ? (
-          <ul>
-            {connectedEdges.map((edge) => {
-              const otherNodeId =
-                edge.source === record.id ? edge.target : edge.source;
-              const otherNode = nodes.find((n) => n.id === otherNodeId);
-              return (
-                <li key={edge.id}>
-                  {otherNode
-                    ? `${record.name} (ID: ${record.id}) ➔ ${otherNode.data.name} (ID: ${otherNode.id})`
-                    : "Unknown"}
-                </li>
-              );
-            })}
+        return (
+          <>
+            {connectedEdges.length > 0 ? (
+              <ul>
+                {connectedEdges.map((edge) => {
+                  const otherNodeId =
+                    edge.source === record.id ? edge.target : edge.source;
+                  const otherNode = nodes.find((n) => n.id === otherNodeId);
+                  return (
+                    <li key={edge.id}>
+                      {otherNode
+                        ? `${record.name} (ID: ${record.id}) ➔ ${otherNode.data.name} (ID: ${otherNode.id})`
+                        : "Unknown"}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <span>Tidak ada koneksi</span>
+            )}
+
             <Button
-        type="default"
-        icon={<EditOutlined />}
-        onClick={() => handleEditEdgeClick(record)}
-      >
-        Edit Edge
-      </Button>
-          </ul>
-        ) : (
-          <span>Tidak ada koneksi</span>
+              type="default"
+              icon={<EditOutlined />}
+              onClick={() => handleEditEdgeClick(record)}
+            >
+              Edit Edge
+            </Button>
+          </>
         );
       },
     },
@@ -170,29 +226,51 @@ const handleEditEdgeClick = (record) => {
   }));
 
   // State untuk menyimpan edge yang dipilih
-const [selectedEdge, setSelectedEdge] = useState(null);
-const [isEditEdgeFormVisible, setIsEditEdgeFormVisible] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState(null);
+  const [isEditEdgeFormVisible, setIsEditEdgeFormVisible] = useState(false);
+  const [isEditPimpinanFormVisible, setIsEditPimpinanFormVisible] = useState(false);
 
-// Form untuk mengedit edge
-const handleEditEdgeFormSubmit = (values) => {
-  // Update edge berdasarkan id
-  setEdges((prevEdges) => {
-    return prevEdges.map((edge) =>
-      edge.id === selectedEdge.id ? { ...edge, source: values.source, target: values.target } : edge
-    );
-  });
+  // Form untuk mengedit edge
+  const handleEditEdgeFormSubmit = (values) => {
+    // Update edge berdasarkan id
+    setEdges((prevEdges) => {
+      return prevEdges.map((edge) =>
+        edge.id === selectedEdge.id
+          ? { ...edge, source: values.source, target: values.target }
+          : edge
+      );
+    });
 
-  // Tutup modal setelah submit
-  setIsEditEdgeFormVisible(false);
-  setSelectedEdge(null);
-};
+    // Tutup modal setelah submit
+    setIsEditEdgeFormVisible(false);
+    setSelectedEdge(null);
+  };
 
-// Menutup modal jika batal
-const handleCancelEdgeEdit = () => {
-  setIsEditEdgeFormVisible(false);
-  setSelectedEdge(null);
-};
+  // Menutup modal jika batal
+  const handleCancelEdgeEdit = () => {
+    setIsEditEdgeFormVisible(false);
+    setSelectedEdge(null);
+  };
 
+
+    const handleEditPimpinanFormSubmit = (values) => {
+      // Update edge berdasarkan id
+      setEdges((prevEdges) => {
+        return prevEdges.map((edge) =>
+          edge.id === selectedEdge.id
+            ? { ...edge, source: values.source, target: values.target }
+            : edge
+        );
+      });
+  
+      // Tutup modal setelah submit
+      setIsEditPimpinanFormVisible(false);
+      setSelectedEdge(null);
+    };
+  const handleCancelPimpinanEdit = () => {
+    setIsEditPimpinanFormVisible(false);
+    setSelectedEdge(null);
+  };
 
   return (
     <div
@@ -215,7 +293,66 @@ const handleCancelEdgeEdit = () => {
         rowKey="id"
         style={{ width: "100%" }}
       />
+      {/* //Modal edit pimpinan */}
+      <Modal
+        title={`Edit Edge ${selectedEdge ? selectedEdge.id : ""}`}
+        visible={isEditPimpinanFormVisible}
+        onCancel={handleCancelPimpinanEdit}
+        footer={null}
+        destroyOnClose={true}
+      >
+        {selectedEdge ? (
+          <Form
+            initialValues={{
+              source: selectedEdge.source,
+              target: selectedEdge.target,
+            }}
+            onFinish={handleEditPimpinanFormSubmit}
+            layout="vertical"
+          >
+            <Form.Item
+              label="Source Node"
+              name="source"
+              rules={[{ required: true, message: "Source node wajib diisi" }]}
+            >
+              <Select style={{ width: "100%" }}>
+                {nodes
+                  .filter((node) => node.id !== selectedEdge.target) // Pastikan tidak memilih target yang sama dengan source
+                  .map((node) => (
+                    <Select.Option key={node.id} value={node.id}>
+                      {node.data.name} (ID: {node.id})
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
+            <Form.Item
+              label="Target Node"
+              name="target"
+              rules={[{ required: true, message: "Target node wajib diisi" }]}
+            >
+              <Select style={{ width: "100%" }}>
+                {nodes
+                  .filter((node) => node.id !== selectedEdge.source) // Pastikan tidak memilih source yang sama dengan target
+                  .map((node) => (
+                    <Select.Option key={node.id} value={node.id}>
+                      {node.data.name} (ID: {node.id})
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Simpan
+              </Button>
+            </Form.Item>
+          </Form>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </Modal>
+      {/* // */}
       <Modal
         title={`Update Node ${selectedNode ? selectedNode.id : ""}`}
         visible={isUpdateFormVisible}
@@ -297,67 +434,65 @@ const handleCancelEdgeEdit = () => {
           <p>Loading...</p>
         )}
       </Modal>
-
-      // Modal untuk mengedit edge
-<Modal
-  title={`Edit Edge ${selectedEdge ? selectedEdge.id : ""}`}
-  visible={isEditEdgeFormVisible}
-  onCancel={handleCancelEdgeEdit}
-  footer={null}
-  destroyOnClose={true}
->
-  {selectedEdge ? (
-    <Form
-      initialValues={{
-        source: selectedEdge.source,
-        target: selectedEdge.target,
-      }}
-      onFinish={handleEditEdgeFormSubmit}
-      layout="vertical"
-    >
-      <Form.Item
-        label="Source Node"
-        name="source"
-        rules={[{ required: true, message: "Source node wajib diisi" }]}
+      {/* // Modal untuk mengedit edge */}
+      <Modal
+        title={`Edit Edge ${selectedEdge ? selectedEdge.id : ""}`}
+        visible={isEditEdgeFormVisible}
+        onCancel={handleCancelEdgeEdit}
+        footer={null}
+        destroyOnClose={true}
       >
-        <Select style={{ width: "100%" }}>
-          {nodes
-            .filter((node) => node.id !== selectedEdge.target)  // Pastikan tidak memilih target yang sama dengan source
-            .map((node) => (
-              <Select.Option key={node.id} value={node.id}>
-                {node.data.name} (ID: {node.id})
-              </Select.Option>
-            ))}
-        </Select>
-      </Form.Item>
+        {selectedEdge ? (
+          <Form
+            initialValues={{
+              source: selectedEdge.source,
+              target: selectedEdge.target,
+            }}
+            onFinish={handleEditEdgeFormSubmit}
+            layout="vertical"
+          >
+            <Form.Item
+              label="Source Node"
+              name="source"
+              rules={[{ required: true, message: "Source node wajib diisi" }]}
+            >
+              <Select style={{ width: "100%" }}>
+                {nodes
+                  .filter((node) => node.id !== selectedEdge.target) // Pastikan tidak memilih target yang sama dengan source
+                  .map((node) => (
+                    <Select.Option key={node.id} value={node.id}>
+                      {node.data.name} (ID: {node.id})
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
-      <Form.Item
-        label="Target Node"
-        name="target"
-        rules={[{ required: true, message: "Target node wajib diisi" }]}
-      >
-        <Select style={{ width: "100%" }}>
-          {nodes
-            .filter((node) => node.id !== selectedEdge.source)  // Pastikan tidak memilih source yang sama dengan target
-            .map((node) => (
-              <Select.Option key={node.id} value={node.id}>
-                {node.data.name} (ID: {node.id})
-              </Select.Option>
-            ))}
-        </Select>
-      </Form.Item>
+            <Form.Item
+              label="Target Node"
+              name="target"
+              rules={[{ required: true, message: "Target node wajib diisi" }]}
+            >
+              <Select style={{ width: "100%" }}>
+                {nodes
+                  .filter((node) => node.id !== selectedEdge.source) // Pastikan tidak memilih source yang sama dengan target
+                  .map((node) => (
+                    <Select.Option key={node.id} value={node.id}>
+                      {node.data.name} (ID: {node.id})
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Simpan
-        </Button>
-      </Form.Item>
-    </Form>
-  ) : (
-    <p>Loading...</p>
-  )}
-</Modal>
-
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Simpan
+              </Button>
+            </Form.Item>
+          </Form>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </Modal>
     </div>
   );
 };
